@@ -46,10 +46,7 @@ const LoginPage = () => {
       return Boolean(
         localStorage.getItem(
           "rememberEmail"
-        ) &&
-          localStorage.getItem(
-            "rememberPassword"
-          )
+        )
       );
     });
 
@@ -60,10 +57,7 @@ const LoginPage = () => {
         localStorage.getItem(
           "rememberEmail"
         ) || "",
-      password:
-        localStorage.getItem(
-          "rememberPassword"
-        ) || "",
+      password: "",
     }));
 
   const {
@@ -109,18 +103,9 @@ const LoginPage = () => {
         "rememberEmail",
         formData.email
       );
-
-      localStorage.setItem(
-        "rememberPassword",
-        formData.password
-      );
     } else {
       localStorage.removeItem(
         "rememberEmail"
-      );
-
-      localStorage.removeItem(
-        "rememberPassword"
       );
     }
 
@@ -138,6 +123,10 @@ const LoginPage = () => {
   */
 
   useEffect(() => {
+    localStorage.removeItem(
+      "rememberPassword"
+    );
+
   if (
     isAuthenticated &&
     user
