@@ -4,11 +4,12 @@ export const AUTH = {
   PROFILE: "/auth/profile",
 };
 
+// Backend mounts at /api/users (not /api/employees)
 export const EMPLOYEE = {
-  LIST: "/employees",
-  CREATE: "/employees",
-  DETAILS: (id) => `/employees/${id}`,
-  UPDATE: (id) => `/employees/${id}`,
+  LIST: "/users",
+  CREATE: "/users",
+  DETAILS: (id) => `/users/${id}`,
+  UPDATE: (id) => `/users/${id}`,
 };
 
 export const ATTENDANCE = {
@@ -20,19 +21,22 @@ export const ATTENDANCE = {
   MONTHLY: "/attendance/monthly",
 };
 
+// Backend mounts at /api/leave; route sub-paths differ from original
 export const LEAVE = {
   APPLY: "/leave/apply",
-  MY_LEAVES: "/leave/my",
-  ALL: "/leave",
-  APPROVE: (id) => `/leave/${id}/approve`,
-  REJECT: (id) => `/leave/${id}/reject`,
+  MY_LEAVES: "/leave/my-leaves",          // backend: GET /leave/my-leaves
+  ALL: "/leave/all",                       // backend: GET /leave/all
+  APPROVE: (id) => `/leave/approve/${id}`, // backend: PUT /leave/approve/:id
+  REJECT: (id) => `/leave/reject/${id}`,   // backend: PUT /leave/reject/:id
 };
 
+// Backend mounts at /api/holiday (singular)
 export const HOLIDAY = {
-  LIST: "/holidays",
-  CREATE: "/holidays",
-  UPDATE: (id) => `/holidays/${id}`,
-  DELETE: (id) => `/holidays/${id}`,
+  LIST: "/holiday/all",
+  UPCOMING: "/holiday/upcoming",
+  CREATE: "/holiday/add",
+  UPDATE: (id) => `/holiday/update/${id}`,
+  DELETE: (id) => `/holiday/delete/${id}`,
 };
 
 export const SALARY = {
@@ -44,9 +48,13 @@ export const SALARY = {
 export const DASHBOARD = {
   HR: "/dashboard/hr",
   EMPLOYEE: "/dashboard/employee",
+  MONTHLY_ATTENDANCE: "/dashboard/monthly-attendance",
 };
 
 export const NOTIFICATION = {
   LIST: "/notifications",
-  BIRTHDAYS: "/notifications/birthdays",
+  UNREAD_COUNT: "/notifications/unread-count",
+  MARK_READ: (id) => `/notifications/read/${id}`,
+  MARK_ALL_READ: "/notifications/read-all",
+  DELETE: (id) => `/notifications/delete/${id}`,
 };

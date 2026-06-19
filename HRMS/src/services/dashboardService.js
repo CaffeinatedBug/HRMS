@@ -1,5 +1,5 @@
 import BaseApiManager from "../api/BaseApiManager";
-import { DASHBOARD, NOTIFICATION } from "../api/endpoints";
+import { DASHBOARD } from "../api/endpoints";
 
 export const dashboardService = {
   getHRDashboard: () =>
@@ -8,6 +8,6 @@ export const dashboardService = {
   getEmployeeDashboard: () =>
     BaseApiManager.get(DASHBOARD.EMPLOYEE),
 
-  getBirthdays: () =>
-    BaseApiManager.get(NOTIFICATION.BIRTHDAYS),
+  getMonthlyAttendance: () =>
+    BaseApiManager.get(DASHBOARD.MONTHLY_ATTENDANCE),
 };

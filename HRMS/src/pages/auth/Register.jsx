@@ -119,7 +119,7 @@ const RegisterPage = () => {
     if (
       isAuthenticated &&
       user?.role ===
-        "EMPLOYEE"
+      "EMPLOYEE"
     ) {
       toast.success(
         "Registration successful"
@@ -233,7 +233,7 @@ const RegisterPage = () => {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                PHONE
+                PHONE (Optional)
               </label>
 
               <input
@@ -245,7 +245,7 @@ const RegisterPage = () => {
                 onChange={
                   handleChange
                 }
-                placeholder="Optional, e.g. 9876543210"
+                placeholder="e.g. 9876543210"
                 className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-lg outline-none"
               />
             </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clock3, Umbrella } from "lucide-react";
+import { CalendarDays, Clock3, BellRing } from "lucide-react";
 import dayjs from "dayjs";
 
 import AsyncPageState from "../../components/common/AsyncPageState";
@@ -14,22 +14,22 @@ import { getErrorMessage } from "../../utils/helper";
 
 const STAT_CARD_CONFIG = [
   {
-    key: "attendanceToday",
+    key: "hasPunchedIn",
     label: "Today's Attendance",
-    hint: "Your punch record for today",
+    hint: "Your punch status for today",
     icon: Clock3,
   },
   {
-    key: "pendingLeaves",
-    label: "Pending Leaves",
-    hint: "Your unapproved leave requests",
-    icon: Umbrella,
+    key: "leaveCount",
+    label: "Total Leaves",
+    hint: "Your total leave applications",
+    icon: CalendarDays,
   },
   {
-    key: "holidaysThisMonth",
-    label: "Holidays This Month",
-    hint: "Upcoming company holidays",
-    icon: CalendarDays,
+    key: "unreadNotifications",
+    label: "Notifications",
+    hint: "Unread notifications",
+    icon: BellRing,
   },
 ];
 
@@ -38,30 +38,29 @@ const STAT_CARD_CONFIG = [
 // ---------------------------------------------------------------------------
 
 /**
- * Normalises the various shapes the backend may return into a stable object
- * the component can rely on.
+ * Maps the backend's getEmployeeDashboard() response shape into a stable
+ * internal model the component relies on.
  *
- * @param {Object} dashboardPayload  - response from getEmployeeDashboard()
- * @param {unknown} birthdaysPayload - response from getBirthdays()
- * @returns {{ attendanceToday: number, pendingLeaves: number, holidaysThisMonth: number, birthdays: Object[], holidays: Object[], leaves: Object[] }}
+ * Backend response (data field):
+ *  - todayAttendance : Attendance object | null
+ *  - leaveCount      : number
+ *  - unreadNotifications : number
+ *  - latestSalary    : Salary object | null
+ *  - upcomingHolidays: Holiday[]
+ *
+ * @param {Object} payload  raw API response
+ * @returns {{ hasPunchedIn: number, leaveCount: number, unreadNotifications: number, holidays: Object[] }}
  */
-const normalizeDashboardData = (dashboardPayload, birthdaysPayload) => {
-  const src = dashboardPayload?.data ?? dashboardPayload?.dashboard ?? dashboardPayload ?? {};
-
-  const toArray = (val) => (Array.isArray(val) ? val : []);
+const normalizeDashboardData = (payload) => {
+  const src = payload?.data ?? payload ?? {};
 
   return {
-    attendanceToday:
-      src.todayAttendance ?? src.presentToday ?? src.attendanceCount ?? 0,
-    pendingLeaves:
-      src.pendingLeaves ?? src.leaveApprovalsPending ?? 0,
-    holidaysThisMonth:
-      src.holidaysThisMonth ?? src.monthlyHolidays ?? 0,
-    birthdays: toArray(
-      birthdaysPayload?.data ?? birthdaysPayload?.birthdays ?? birthdaysPayload
-    ),
-    holidays: toArray(src.holidays ?? src.upcomingHolidays),
-    leaves: toArray(src.leaves ?? src.myLeaves),
+    // todayAttendance is an object or null — convert to a 0/1 for the stat card
+    hasPunchedIn: src.todayAttendance ? 1 : 0,
+    leaveCount: src.leaveCount ?? 0,
+    unreadNotifications: src.unreadNotifications ?? 0,
+    holidays: Array.isArray(src.upcomingHolidays) ? src.upcomingHolidays : [],
+    latestSalary: src.latestSalary ?? null,
   };
 };
 
@@ -69,42 +68,22 @@ const normalizeDashboardData = (dashboardPayload, birthdaysPayload) => {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-/**
- * A reusable list section card used for both "Upcoming Holidays" and
- * "Upcoming Birthdays" to avoid JSX duplication.
- */
 const DashboardListSection = ({ title, emptyMessage, children }) => (
   <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
     <h2 className="text-xl font-semibold text-gray-950">{title}</h2>
     <div className="mt-5 grid gap-3">
-      {children ?? (
-        <p className="text-sm text-gray-600">{emptyMessage}</p>
-      )}
+      {children ?? <p className="text-sm text-gray-600">{emptyMessage}</p>}
     </div>
   </section>
 );
 
 const HolidayListItem = ({ holiday }) => (
   <article className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-    <p className="font-semibold text-gray-900">{holiday.name ?? "Holiday"}</p>
-    <p className="text-sm font-medium text-gray-700">
-      {dayjs(holiday.date).format("MMM DD, YYYY")}
+    <p className="font-semibold text-gray-900">
+      {holiday.holidayName ?? holiday.name ?? "Holiday"}
     </p>
-  </article>
-);
-
-const BirthdayListItem = ({ employee }) => (
-  <article className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-    <div>
-      <p className="font-semibold text-gray-900">
-        {employee.name ?? employee.fullName ?? employee.employeeName ?? "Employee"}
-      </p>
-      <p className="text-sm text-gray-600">
-        {employee.department ?? employee.team ?? "Team not available"}
-      </p>
-    </div>
     <p className="text-sm font-medium text-gray-700">
-      {employee.date ?? employee.birthday ?? employee.birthDate ?? "Date pending"}
+      {dayjs(holiday.holidayDate ?? holiday.date).format("MMM DD, YYYY")}
     </p>
   </article>
 );
@@ -124,15 +103,11 @@ const EmployeeDashboard = () => {
     setPageState({ loading: true, error: "", data: null });
 
     try {
-      const [dashboardResponse, birthdaysResponse] = await Promise.all([
-        dashboardService.getEmployeeDashboard(),
-        dashboardService.getBirthdays(),
-      ]);
-
+      const response = await dashboardService.getEmployeeDashboard();
       setPageState({
         loading: false,
         error: "",
-        data: normalizeDashboardData(dashboardResponse, birthdaysResponse),
+        data: normalizeDashboardData(response),
       });
     } catch (err) {
       setPageState({
@@ -149,7 +124,6 @@ const EmployeeDashboard = () => {
 
   const { data } = pageState;
 
-  // Memoised so the array identity is stable between renders when data hasn't changed.
   const statCards = useMemo(
     () =>
       STAT_CARD_CONFIG.map(({ key, label, hint, icon }) => ({
@@ -188,10 +162,7 @@ const EmployeeDashboard = () => {
         {/* ── Calendar + side lists ── */}
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <CalendarView
-              holidays={data?.holidays ?? []}
-              leaves={data?.leaves ?? []}
-            />
+            <CalendarView holidays={data?.holidays ?? []} leaves={[]} />
           </div>
 
           <div className="space-y-6">
@@ -201,24 +172,33 @@ const EmployeeDashboard = () => {
             >
               {data?.holidays?.length
                 ? data.holidays.map((holiday, i) => (
-                    <HolidayListItem key={holiday.id ?? i} holiday={holiday} />
+                    <HolidayListItem key={holiday._id ?? i} holiday={holiday} />
                   ))
                 : null}
             </DashboardListSection>
 
-            <DashboardListSection
-              title="Upcoming Birthdays"
-              emptyMessage="No upcoming birthdays right now."
-            >
-              {data?.birthdays?.length
-                ? data.birthdays.map((employee, i) => (
-                    <BirthdayListItem
-                      key={employee.id ?? employee._id ?? employee.email ?? i}
-                      employee={employee}
-                    />
-                  ))
-                : null}
-            </DashboardListSection>
+            {data?.latestSalary && (
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-gray-950">Latest Salary</h2>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">
+                    {data.latestSalary.month} / {data.latestSalary.year}
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    ₹{(data.latestSalary.netSalary ?? data.latestSalary.amount ?? 0).toLocaleString()}
+                  </p>
+                  <span
+                    className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                      data.latestSalary.status === "Paid"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {data.latestSalary.status ?? "Pending"}
+                  </span>
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>

@@ -12,8 +12,8 @@ export const leaveService = {
     BaseApiManager.get(LEAVE.ALL, params),
 
   approve: (id) =>
-    BaseApiManager.patch(LEAVE.APPROVE(id)),
+    BaseApiManager.put(LEAVE.APPROVE(id)),
 
   reject: (id) =>
-    BaseApiManager.patch(LEAVE.REJECT(id)),
+    BaseApiManager.put(LEAVE.REJECT(id)),
 };

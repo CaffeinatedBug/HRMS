@@ -102,7 +102,7 @@ const CalendarView = ({ holidays = [], leaves = [] }) => {
 
   // O(1) date membership sets — recomputed only when input arrays change.
   const holidaySet = useMemo(
-    () => buildDateSet(holidays, ["date", "holidayDate"]),
+    () => buildDateSet(holidays, ["holidayDate", "date"]),
     [holidays]
   );
   const leaveSet = useMemo(
