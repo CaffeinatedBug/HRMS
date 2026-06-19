@@ -33,6 +33,43 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+export const registerUser =
+  createAsyncThunk(
+    "auth/registerUser",
+    async (payload, thunkAPI) => {
+      try {
+        const response =
+          await BaseApiManager.post(
+            AUTH.REGISTER,
+            payload
+          );
+
+        localStorage.setItem(
+          "token",
+          response.token
+        );
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(response.user)
+        );
+
+      return response;
+    } catch (error) {
+      const validationMessage =
+        error.errors?.[0]
+          ?.msg;
+
+      return thunkAPI.rejectWithValue(
+        validationMessage ||
+        error.message ||
+          error.error ||
+          "Registration failed"
+        );
+      }
+    }
+  );
+
 export const getProfile =
   createAsyncThunk(
     "auth/getProfile",
@@ -46,7 +83,9 @@ export const getProfile =
         return response.user;
       } catch (error) {
         return thunkAPI.rejectWithValue(
-          error.message
+          error.message ||
+            error.error ||
+            "Failed to load profile"
         );
       }
     }

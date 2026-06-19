@@ -21,7 +21,6 @@ import {
   RiLockPasswordLine,
   RiLockPasswordFill,
 } from "react-icons/ri";
-
 import LoginImage from "../../assets/images/loginImage.png";
 import CompanyLogo from "../../assets/logo/logo.png";
 
@@ -175,8 +174,6 @@ const LoginPage = () => {
     <div className="w-full h-screen overflow-auto bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-6xl flex lg:flex-row flex-col items-center justify-between gap-12">
 
-        {/* LEFT IMAGE */}
-
         <div className="hidden lg:flex w-1/2 justify-center">
           <img
             src={
@@ -186,8 +183,6 @@ const LoginPage = () => {
             className="w-full max-w-lg object-contain"
           />
         </div>
-
-        {/* LOGIN FORM */}
 
         <div className="w-full lg:w-[400px] flex flex-col justify-center">
 
@@ -218,9 +213,6 @@ const LoginPage = () => {
             }
             className="space-y-5"
           >
-
-            {/* EMAIL */}
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 EMAIL
@@ -240,8 +232,6 @@ const LoginPage = () => {
                 required
               />
             </div>
-
-            {/* PASSWORD */}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -294,8 +284,6 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {/* REMEMBER */}
-
             <div className="flex items-center justify-between text-sm">
 
               <label className="flex items-center gap-2 cursor-pointer text-gray-600">
@@ -327,8 +315,6 @@ const LoginPage = () => {
               </button>
 
             </div>
-
-            {/* LOGIN BUTTON */}
 
             <button
               type="submit"
