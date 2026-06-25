@@ -1,0 +1,42 @@
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# User-uploaded files (profile photos, documents, etc.)
+src/uploads/
+uploads/
+
+# Build output
+dist/
+build/
+
+# Coverage / test output
+coverage/
+.nyc_output/
+
+# Runtime files
+*.pid
+*.pid.lock
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sw?
