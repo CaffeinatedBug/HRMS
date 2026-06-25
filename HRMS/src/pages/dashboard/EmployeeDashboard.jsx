@@ -1,16 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clock3, BellRing } from "lucide-react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  CalendarDays,
+  Clock3,
+  BellRing,
+  Cake,
+  IndianRupee,
+  ArrowRight,
+} from "lucide-react";
 import dayjs from "dayjs";
 
 import AsyncPageState from "../../components/common/AsyncPageState";
 import StatsCard from "../../components/dashboard/StatsCard";
 import CalendarView from "../../components/dashboard/CalendarView";
 import { dashboardService } from "../../services/dashboardService";
+import { fetchAllEmployees } from "../../services/birthdayService";
 import { getErrorMessage } from "../../utils/helper";
+import {
+  isBirthdayToday,
+  daysUntilBirthday,
+  birthdaysWithinDays,
+} from "../../utils/birthdayUtils";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 const STAT_CARD_CONFIG = [
   {
@@ -37,25 +57,9 @@ const STAT_CARD_CONFIG = [
 // Pure helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Maps the backend's getEmployeeDashboard() response shape into a stable
- * internal model the component relies on.
- *
- * Backend response (data field):
- *  - todayAttendance : Attendance object | null
- *  - leaveCount      : number
- *  - unreadNotifications : number
- *  - latestSalary    : Salary object | null
- *  - upcomingHolidays: Holiday[]
- *
- * @param {Object} payload  raw API response
- * @returns {{ hasPunchedIn: number, leaveCount: number, unreadNotifications: number, holidays: Object[] }}
- */
 const normalizeDashboardData = (payload) => {
   const src = payload?.data ?? payload ?? {};
-
   return {
-    // todayAttendance is an object or null — convert to a 0/1 for the stat card
     hasPunchedIn: src.todayAttendance ? 1 : 0,
     leaveCount: src.leaveCount ?? 0,
     unreadNotifications: src.unreadNotifications ?? 0,
@@ -68,59 +72,164 @@ const normalizeDashboardData = (payload) => {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-const DashboardListSection = ({ title, emptyMessage, children }) => (
-  <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-    <h2 className="text-xl font-semibold text-gray-950">{title}</h2>
-    <div className="mt-5 grid gap-3">
-      {children ?? <p className="text-sm text-gray-600">{emptyMessage}</p>}
+const SectionCard = ({ title, children, linkTo, linkLabel, navigate }) => (
+  <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="mb-4 flex items-center justify-between">
+      <h2 className="font-semibold text-gray-950">{title}</h2>
+      {linkTo && (
+        <button
+          onClick={() => navigate(linkTo)}
+          className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+        >
+          {linkLabel ?? "View all"} <ArrowRight size={12} />
+        </button>
+      )}
     </div>
+    {children}
   </section>
 );
 
-const HolidayListItem = ({ holiday }) => (
-  <article className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-    <p className="font-semibold text-gray-900">
+const HolidayItem = ({ holiday }) => (
+  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+    <p className="text-sm font-semibold text-gray-900">
       {holiday.holidayName ?? holiday.name ?? "Holiday"}
     </p>
-    <p className="text-sm font-medium text-gray-700">
-      {dayjs(holiday.holidayDate ?? holiday.date).format("MMM DD, YYYY")}
+    <p className="text-xs font-medium text-gray-500">
+      {dayjs(holiday.holidayDate ?? holiday.date).format("DD MMM")}
     </p>
-  </article>
+  </div>
 );
+
+const BirthdayItem = ({ person, isSelf }) => {
+  const daysUntil = daysUntilBirthday(person.dob);
+  const fullName = `${person.firstName ?? ""} ${person.lastName ?? ""}`.trim();
+  const isToday = daysUntil === 0;
+
+  return (
+    <div
+      className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
+        isToday
+          ? "border-pink-200 bg-pink-50"
+          : "border-gray-100 bg-gray-50"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-xl">{isToday ? "🎂" : "🎈"}</span>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">
+            {fullName}
+            {isSelf && (
+              <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                You
+              </span>
+            )}
+          </p>
+          <p className="text-xs text-gray-500">
+            {dayjs(person.dob).format("DD MMM")}
+          </p>
+        </div>
+      </div>
+      <span
+        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+          isToday
+            ? "bg-pink-100 text-pink-700"
+            : "bg-blue-100 text-blue-700"
+        }`}
+      >
+        {isToday ? "Today 🎉" : `In ${daysUntil}d`}
+      </span>
+    </div>
+  );
+};
+
+const SalaryWidget = ({ salary, navigate }) => {
+  const statusStyle =
+    salary.paymentStatus === "Paid"
+      ? "bg-green-100 text-green-700"
+      : salary.paymentStatus === "Processed"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-yellow-100 text-yellow-700";
+
+  return (
+    <section
+      className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+      onClick={() => navigate("/my-salary")}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 text-gray-700">
+          <IndianRupee size={18} />
+          <span className="font-semibold">Latest Salary</span>
+        </div>
+        <ArrowRight size={16} className="text-gray-400" />
+      </div>
+      <p className="text-2xl font-bold text-gray-950">
+        ₹{(salary.netSalary ?? 0).toLocaleString("en-IN")}
+      </p>
+      <p className="mt-1 text-sm text-gray-500">
+        {MONTH_NAMES[(salary.month ?? 1) - 1]} {salary.year}
+      </p>
+      <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusStyle}`}>
+        {salary.paymentStatus ?? "Pending"}
+      </span>
+    </section>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // EmployeeDashboard
 // ---------------------------------------------------------------------------
 
 const EmployeeDashboard = () => {
-  const [pageState, setPageState] = useState({
-    loading: true,
-    error: "",
-    data: null,
-  });
+  const navigate = useNavigate();
+  const { user: self } = useSelector((state) => state.auth);
+
+  const [pageState, setPageState] = useState({ loading: true, error: "", data: null });
+  const [teamBirthdays, setTeamBirthdays] = useState([]);
+
+  // ── Dashboard data ─────────────────────────────────────────────────────
 
   const fetchDashboard = useCallback(async () => {
     setPageState({ loading: true, error: "", data: null });
-
     try {
       const response = await dashboardService.getEmployeeDashboard();
-      setPageState({
-        loading: false,
-        error: "",
-        data: normalizeDashboardData(response),
-      });
+      setPageState({ loading: false, error: "", data: normalizeDashboardData(response) });
     } catch (err) {
-      setPageState({
-        loading: false,
-        error: getErrorMessage(err),
-        data: null,
-      });
+      setPageState({ loading: false, error: getErrorMessage(err), data: null });
     }
   }, []);
 
+  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+
+  // ── Team birthday data (HR-only endpoint; fails silently for employees) ─
+
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    fetchAllEmployees()
+      .then((res) => {
+        const members = (res?.users ?? []).filter((u) => !!u.dob);
+        setTeamBirthdays(birthdaysWithinDays(members, 30));
+      })
+      .catch(() => {
+        // Not HR — fall back to own birthday only
+        if (self?.dob) {
+          setTeamBirthdays(
+            birthdaysWithinDays([self], 30)
+          );
+        }
+      });
+  }, [self]);
+
+  // ── Merge team + self, deduplicate, sort by soonest ───────────────────
+
+  const upcomingBirthdays = useMemo(() => {
+    const all = [...teamBirthdays];
+    const ids = new Set(all.map((p) => String(p._id)));
+    if (self?.dob && !ids.has(String(self._id))) {
+      all.push(self);
+    }
+    return birthdaysWithinDays(all, 30).slice(0, 5);
+  }, [teamBirthdays, self]);
+
+  const selfBirthdayToday = isBirthdayToday(self?.dob);
 
   const { data } = pageState;
 
@@ -147,6 +256,17 @@ const EmployeeDashboard = () => {
       onRetry={fetchDashboard}
     >
       <div className="space-y-6">
+
+        {/* Own birthday banner */}
+        {selfBirthdayToday && (
+          <div className="rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 p-5 text-white shadow-md">
+            <p className="text-lg font-bold">🎂 Happy Birthday, {self?.firstName}!</p>
+            <p className="mt-1 text-sm text-pink-100">
+              Wishing you a fantastic day. The entire team celebrates with you! 🎉
+            </p>
+          </div>
+        )}
+
         {/* ── Stats row ── */}
         <div className="grid gap-4 md:grid-cols-3">
           {statCards.map(({ label, value, hint, icon: Icon }) => (
@@ -159,45 +279,53 @@ const EmployeeDashboard = () => {
           ))}
         </div>
 
-        {/* ── Calendar + side lists ── */}
+        {/* ── Calendar + side panels ── */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <CalendarView holidays={data?.holidays ?? []} leaves={[]} />
           </div>
 
-          <div className="space-y-6">
-            <DashboardListSection
+          <div className="space-y-5">
+            {/* Upcoming holidays */}
+            <SectionCard
               title="Upcoming Holidays"
-              emptyMessage="No upcoming holidays scheduled."
+              linkTo="/employee/holidays"
+              navigate={navigate}
             >
-              {data?.holidays?.length
-                ? data.holidays.map((holiday, i) => (
-                    <HolidayListItem key={holiday._id ?? i} holiday={holiday} />
-                  ))
-                : null}
-            </DashboardListSection>
-
-            {data?.latestSalary && (
-              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-gray-950">Latest Salary</h2>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    {data.latestSalary.month} / {data.latestSalary.year}
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    ₹{(data.latestSalary.netSalary ?? data.latestSalary.amount ?? 0).toLocaleString()}
-                  </p>
-                  <span
-                    className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                      data.latestSalary.status === "Paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {data.latestSalary.status ?? "Pending"}
-                  </span>
+              {data?.holidays?.length ? (
+                <div className="space-y-2">
+                  {data.holidays.slice(0, 4).map((h, i) => (
+                    <HolidayItem key={h._id ?? i} holiday={h} />
+                  ))}
                 </div>
-              </section>
+              ) : (
+                <p className="text-sm text-gray-500">No upcoming holidays.</p>
+              )}
+            </SectionCard>
+
+            {/* Team birthdays */}
+            {upcomingBirthdays.length > 0 && (
+              <SectionCard
+                title={`🎂 Upcoming Birthdays`}
+                linkTo="/employee/birthdays"
+                linkLabel="See all"
+                navigate={navigate}
+              >
+                <div className="space-y-2">
+                  {upcomingBirthdays.map((person, i) => (
+                    <BirthdayItem
+                      key={person._id ?? i}
+                      person={person}
+                      isSelf={String(person._id) === String(self?._id)}
+                    />
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Salary snippet */}
+            {data?.latestSalary && (
+              <SalaryWidget salary={data.latestSalary} navigate={navigate} />
             )}
           </div>
         </div>
