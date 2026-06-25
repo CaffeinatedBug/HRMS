@@ -6,10 +6,9 @@ export const AUTH = {
 
 // Backend mounts at /api/users (not /api/employees)
 export const EMPLOYEE = {
-  LIST: "/users",
-  CREATE: "/users",
+  LIST: "/users/all",
   DETAILS: (id) => `/users/${id}`,
-  UPDATE: (id) => `/users/${id}`,
+  UPDATE_PROFILE: "/users/profile",  // PUT — updates the logged-in user's profile
 };
 
 export const ATTENDANCE = {
@@ -40,9 +39,14 @@ export const HOLIDAY = {
 };
 
 export const SALARY = {
-  LIST: "/salary",
-  DETAILS: (id) => `/salary/${id}`,
-  CONFIRM: (id) => `/salary/${id}/confirm`,
+  MY_SALARIES: "/salary/my-salaries",  // GET — employee's own salary history
+  DETAILS: (id) => `/salary/${id}`,    // GET — single salary slip
+  // HR-only routes below
+  ALL: "/salary/all",
+  GENERATE: "/salary/generate",
+  CONFIRM: (id) => `/salary/confirm/${id}`,
+  UPDATE: (id) => `/salary/update/${id}`,
+  DELETE: (id) => `/salary/delete/${id}`,
 };
 
 export const DASHBOARD = {

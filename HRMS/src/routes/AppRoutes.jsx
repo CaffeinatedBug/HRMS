@@ -15,6 +15,7 @@ import PublicRoute from "./PublicRoute";
 /* Pages */
 import Dashboard from "../pages/dashboard/Dashboard";
 import Attendance from "../pages/attendance/Attendance";
+import MonthlyAttendance from "../pages/attendance/MonthlyAttendance";
 import EmployeeDashboard from "../pages/dashboard/EmployeeDashboard";
 import EmployeeList from "../pages/employees/EmployeeList";
 import AddEmployee from "../pages/employees/AddEmployee";
@@ -28,6 +29,8 @@ import SalaryDetails from "../pages/salary/SalaryDetails";
 import Notifications from "../pages/notifications/Notifications";
 import Profile from "../pages/profile/Profile";
 import Reports from "../pages/reports/Reports";
+import MySalary from "../pages/salary/MySalary";
+import Birthdays from "../pages/birthdays/Birthdays";
 import NotFound from "../pages/not-found/NotFound";
 
 const AppRoutes = () => {
@@ -134,6 +137,11 @@ const AppRoutes = () => {
         />
 
         <Route
+          path="/attendance/monthly"
+          element={<MonthlyAttendance />}
+        />
+
+        <Route
           path="/profile"
           element={<Profile />}
         />
@@ -148,6 +156,7 @@ const AppRoutes = () => {
           element={<ApplyLeave />}
         />
 
+
         <Route
           path="/employee/holidays"
           element={<Holidays />}
@@ -156,6 +165,16 @@ const AppRoutes = () => {
         <Route
           path="/employee/notifications"
           element={<Notifications />}
+        />
+
+        <Route
+          path="/my-salary"
+          element={<MySalary />}
+        />
+
+        <Route
+          path="/employee/birthdays"
+          element={<Birthdays />}
         />
       </Route>
 
