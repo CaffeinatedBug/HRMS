@@ -34,12 +34,6 @@ router.get(
   getMySalaries
 );
 
-router.get(
-  "/:id",
-  authMiddleware,
-  getSalaryById
-);
-
 /*
 |--------------------------------------------------------------------------
 | HR Routes
@@ -53,11 +47,19 @@ router.post(
   generateSalary
 );
 
+// NOTE: /all must be registered BEFORE /:id, otherwise Express matches
+// "all" as a param value and the controller throws an ObjectId cast error.
 router.get(
   "/all",
   authMiddleware,
   roleMiddleware("HR"),
   getAllSalaries
+);
+
+router.get(
+  "/:id",
+  authMiddleware,
+  getSalaryById
 );
 
 router.put(
