@@ -11,6 +11,7 @@ import {
 import {
   useNavigate,
   Link,
+  useLocation,
 } from "react-router-dom";
 
 import {
@@ -34,6 +35,11 @@ const LoginPage = () => {
 
   const navigate =
     useNavigate();
+
+  const location = useLocation();
+
+  const sessionExpired =
+    new URLSearchParams(location.search).get("session") === "expired";
 
   const [showPassword,
     setShowPassword] =
@@ -207,10 +213,21 @@ const LoginPage = () => {
             </p>
           </div>
 
+          {/* Session expired banner */}
+          {sessionExpired && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <span className="mt-0.5 text-amber-500 text-base">⚠</span>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Session expired</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Your session timed out. Please sign in again to continue.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form
-            onSubmit={
-              handleSubmit
-            }
+            onSubmit={handleSubmit}
             className="space-y-5"
           >
             <div>

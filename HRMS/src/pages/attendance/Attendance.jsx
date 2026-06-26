@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { Clock3, LogIn, LogOut, AlertCircle } from "lucide-react";
+import { Clock3, LogIn, LogOut, AlertCircle, WifiOff } from "lucide-react";
 import { attendanceService } from "../../services/attendanceService";
 import { getErrorMessage } from "../../utils/helper";
 
@@ -56,6 +56,8 @@ const Attendance = () => {
   const [fetchError, setFetchError] = useState("");
   const [actionStatus, setActionStatus] = useState(STATUS.IDLE);
   const [actionMessage, setActionMessage] = useState("");
+  // null = unknown, true = on office network, false = blocked
+  const [officeNetwork, setOfficeNetwork] = useState(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
@@ -71,6 +73,7 @@ const Attendance = () => {
 
       setTodayRecord(todayRes?.attendance ?? null);
       setHistory(historyRes?.attendance ?? []);
+      setOfficeNetwork(true);
       setFetchStatus(STATUS.SUCCESS);
     } catch (err) {
       setFetchError(getErrorMessage(err));
@@ -97,11 +100,16 @@ const Attendance = () => {
 
         setActionMessage(res?.message ?? (type === "in" ? "Punched In!" : "Punched Out!"));
         setActionStatus(STATUS.SUCCESS);
-        // Reload today's record to reflect the change
         await loadAttendanceData();
       } catch (err) {
-        setActionMessage(getErrorMessage(err));
-        setActionStatus(STATUS.ERROR);
+        // 403 = IP not whitelisted
+        if (err?.status === 403 || err?.response?.status === 403) {
+          setOfficeNetwork(false);
+          setActionStatus(STATUS.IDLE);
+        } else {
+          setActionMessage(getErrorMessage(err));
+          setActionStatus(STATUS.ERROR);
+        }
       }
     },
     [loadAttendanceData]
@@ -111,8 +119,13 @@ const Attendance = () => {
 
   const hasPunchedIn = Boolean(todayRecord?.punchIn);
   const hasPunchedOut = Boolean(todayRecord?.punchOut);
-  const canPunchIn = !hasPunchedIn;
-  const canPunchOut = hasPunchedIn && !hasPunchedOut;
+  const onNetwork = officeNetwork === true;
+  const canPunchIn = !hasPunchedIn && onNetwork;
+  const canPunchOut = hasPunchedIn && !hasPunchedOut && onNetwork;
+
+  const punchDisabledReason = !onNetwork
+    ? "Connect to office Wi-Fi to punch attendance"
+    : undefined;
 
   const totalHoursWorked = history.reduce(
     (sum, r) => sum + parseFloat(r.totalHours ?? 0),
@@ -156,6 +169,27 @@ const Attendance = () => {
         </p>
       </div>
 
+      {/* ── Office network warning banner ── */}
+      {officeNetwork === false && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100">
+              <WifiOff size={18} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-amber-900">⚠ Attendance Unavailable</p>
+              <p className="mt-1 text-sm text-amber-700">
+                You are not connected to the office Wi-Fi or network.
+                Punch In / Punch Out is restricted to whitelisted office IPs only.
+              </p>
+              <p className="mt-2 text-xs text-amber-600 font-medium">
+                Connect to office network and refresh the page to enable attendance.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Today's punch card ── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
@@ -180,7 +214,7 @@ const Attendance = () => {
           </div>
         )}
 
-        {/* Action message */}
+        {/* Generic action message (non-403 errors / success) */}
         {actionMessage && (
           <div
             className={`mb-4 rounded-xl px-4 py-3 text-sm font-medium ${
@@ -193,12 +227,13 @@ const Attendance = () => {
           </div>
         )}
 
-        {/* Punch buttons */}
+        {/* Punch buttons — disabled when off office network */}
         <div className="flex gap-3">
           <button
             id="punch-in-btn"
             onClick={() => handlePunch("in")}
             disabled={!canPunchIn || actionStatus === STATUS.LOADING}
+            title={punchDisabledReason}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogIn size={18} />
@@ -209,6 +244,7 @@ const Attendance = () => {
             id="punch-out-btn"
             onClick={() => handlePunch("out")}
             disabled={!canPunchOut || actionStatus === STATUS.LOADING}
+            title={punchDisabledReason}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogOut size={18} />
