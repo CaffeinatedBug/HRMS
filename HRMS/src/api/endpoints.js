@@ -8,7 +8,8 @@ export const AUTH = {
 export const EMPLOYEE = {
   LIST: "/users/all",
   DETAILS: (id) => `/users/${id}`,
-  UPDATE_PROFILE: "/users/profile",  // PUT — updates the logged-in user's profile
+  UPDATE_PROFILE: "/users/profile",      // PUT — updates the logged-in user's profile
+  COMPLETE_PROFILE: "/users/complete-profile", // POST — first-time DOB wall submission
 };
 
 export const ATTENDANCE = {
@@ -61,4 +62,8 @@ export const NOTIFICATION = {
   MARK_READ: (id) => `/notifications/read/${id}`,
   MARK_ALL_READ: "/notifications/read-all",
   DELETE: (id) => `/notifications/delete/${id}`,
+};
+
+export const CALENDAR = {
+  EVENTS: "/calendar/events",
 };
