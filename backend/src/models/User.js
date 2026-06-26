@@ -73,6 +73,19 @@ const userSchema = new mongoose.Schema(
 
     dob: {
       type: Date,
+      default: null,
+    },
+
+    // Derived from dob — populated by pre-save hook
+    // Used by birthday cron/queries for O(1) indexed lookup
+    birthMonth: {
+      type: Number, // 1–12
+      default: null,
+    },
+
+    birthDay: {
+      type: Number, // 1–31
+      default: null,
     },
 
     joiningDate: {
@@ -105,6 +118,24 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+/*
+|--------------------------------------------------------------------------
+| Auto-populate birthMonth + birthDay from dob
+|--------------------------------------------------------------------------
+*/
+
+userSchema.pre("save", function (next) {
+  if (this.isModified("dob") && this.dob) {
+    const d = new Date(this.dob);
+    this.birthMonth = d.getUTCMonth() + 1; // 1-indexed
+    this.birthDay   = d.getUTCDate();
+  } else if (this.isModified("dob") && !this.dob) {
+    this.birthMonth = null;
+    this.birthDay   = null;
+  }
+  next();
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -162,6 +193,15 @@ userSchema.set("toJSON", {
 userSchema.set("toObject", {
   virtuals: true,
 });
+
+/*
+|--------------------------------------------------------------------------
+| Indexes
+|--------------------------------------------------------------------------
+*/
+
+// Compound index for birthday cron — replaces full-collection scan
+userSchema.index({ birthMonth: 1, birthDay: 1 });
 
 module.exports = mongoose.model(
   "User",

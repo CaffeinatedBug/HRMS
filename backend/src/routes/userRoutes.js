@@ -21,6 +21,13 @@ const {
   "../controllers/userController"
 );
 
+const {
+  completeProfile,
+  updateProfile: updateOwnProfile,
+} = require(
+  "../controllers/profileController"
+);
+
 /*
 |--------------------------------------------------------------------------
 | Profile
@@ -31,6 +38,21 @@ router.put(
   "/profile",
   authMiddleware,
   updateProfile
+);
+
+/*
+|--------------------------------------------------------------------------
+| Complete Profile (First-time DOB wall)
+|
+| POST /api/users/complete-profile
+| Allows any authenticated user to set their DOB for the first time.
+|--------------------------------------------------------------------------
+*/
+
+router.post(
+  "/complete-profile",
+  authMiddleware,
+  completeProfile
 );
 
 /*

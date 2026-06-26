@@ -17,7 +17,15 @@ exports.register = async (req, res) => {
       password,
       phone,
       role,
+      dob,
     } = req.body;
+
+    if (!dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Date of birth is required for registration",
+      });
+    }
 
     const existingUser = await User.findOne({
       email: email.toLowerCase(),
@@ -37,6 +45,7 @@ exports.register = async (req, res) => {
       email: email.toLowerCase(),
       password,
       phone,
+      dob: new Date(dob),
       role: role || "EMPLOYEE",
     });
 
@@ -53,6 +62,7 @@ exports.register = async (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
+        dob: user.dob,
       },
     });
   } catch (error) {
@@ -122,6 +132,7 @@ exports.login = async (req, res) => {
         role: user.role,
         phone: user.phone,
         status: user.status,
+        dob: user.dob ?? null,
       },
     });
   } catch (error) {
