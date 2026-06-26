@@ -125,6 +125,10 @@ const reportRoutes = require(
   "./routes/reportRoutes"
 );
 
+const calendarRoutes = require(
+  "./routes/calendarRoutes"
+);
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -176,6 +180,11 @@ app.use(
 app.use(
   "/api/reports",
   reportRoutes
+);
+
+app.use(
+  "/api/calendar",
+  calendarRoutes
 );
 
 /*
