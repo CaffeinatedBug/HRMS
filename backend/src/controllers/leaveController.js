@@ -1,4 +1,6 @@
 const Leave = require("../models/Leave");
+const dayjs = require("dayjs");
+const notificationService = require("../services/notificationService");
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +150,15 @@ exports.approveLeave =
 
       await leave.save();
 
+      // Notify employee
+      await notificationService.send({
+        recipient: leave.employee,
+        title: "Leave Approved ✅",
+        message: `Your ${leave.leaveType} leave from ${dayjs(leave.fromDate).format("DD MMM")} to ${dayjs(leave.toDate).format("DD MMM YYYY")} has been approved.`,
+        type: "Leave",
+        sentBy: req.user._id,
+      }).catch(console.error);
+
       res.status(200).json({
         success: true,
         message:
@@ -198,6 +209,15 @@ exports.rejectLeave =
         new Date();
 
       await leave.save();
+
+      // Notify employee
+      await notificationService.send({
+        recipient: leave.employee,
+        title: "Leave Rejected ❌",
+        message: `Your ${leave.leaveType} leave request from ${dayjs(leave.fromDate).format("DD MMM")} to ${dayjs(leave.toDate).format("DD MMM YYYY")} has been rejected.`,
+        type: "Leave",
+        sentBy: req.user._id,
+      }).catch(console.error);
 
       res.status(200).json({
         success: true,

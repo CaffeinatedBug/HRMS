@@ -1,4 +1,5 @@
 const Salary = require("../models/Salary");
+const notificationService = require("../services/notificationService");
 
 /*
 |--------------------------------------------------------------------------
@@ -212,6 +213,20 @@ exports.confirmSalary =
         new Date();
 
       await salary.save();
+
+      // Notify employee about salary payment
+      const monthNames = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December",
+      ];
+      const monthName = monthNames[(salary.month ?? 1) - 1];
+
+      await notificationService.send({
+        recipient: salary.employee,
+        title: "Salary Processed 💰",
+        message: `Your salary for ${monthName} ${salary.year} has been processed. Net pay: ₹${Number(salary.netSalary ?? 0).toLocaleString("en-IN")}.`,
+        type: "Salary",
+      }).catch(console.error);
 
       res.status(200).json({
         success: true,
