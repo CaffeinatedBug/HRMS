@@ -7,16 +7,17 @@ import {
   FilePlus,
   User,
   CalendarDays,
-  IndianRupee,
   Bell,
   LogOut,
   Menu,
   X,
   BarChart2,
   Cake,
+  Calendar,
 } from "lucide-react";
 import { useState } from "react";
 import { logoutUser } from "../redux/auth/authThunk";
+import NotificationBell from "../components/notifications/NotificationBell";
 
 // ---------------------------------------------------------------------------
 // Nav config
@@ -28,9 +29,9 @@ const NAV_ITEMS = [
   { to: "/attendance/monthly",     label: "Monthly Report", icon: BarChart2 },
   { to: "/my-leaves",              label: "My Leaves",       icon: CalendarCheck },
   { to: "/apply-leave",            label: "Apply Leave",     icon: FilePlus },
+  { to: "/employee/calendar",      label: "Calendar",        icon: Calendar },
   { to: "/employee/birthdays",     label: "Birthdays",       icon: Cake },
   { to: "/employee/holidays",      label: "Holidays",        icon: CalendarDays },
-  { to: "/my-salary",              label: "My Salary",       icon: IndianRupee },
   { to: "/employee/notifications", label: "Notifications",   icon: Bell },
   { to: "/profile",                label: "Profile",         icon: User },
 ];
@@ -204,7 +205,8 @@ const EmployeeLayout = () => {
           >
             <Menu size={22} />
           </button>
-          <p className="text-sm font-bold text-gray-900">HRMS Employee Portal</p>
+          <p className="flex-1 text-sm font-bold text-gray-900">HRMS Employee Portal</p>
+          <NotificationBell />
         </header>
 
         <main className="flex-1 p-4 md:p-6">

@@ -10,8 +10,10 @@ import {
   BarChart3,
   LogOut,
   ChevronRight,
+  Calendar,
 } from "lucide-react";
 import { logoutUser } from "../redux/auth/authThunk";
+import NotificationBell from "../components/notifications/NotificationBell";
 
 // ---------------------------------------------------------------------------
 // Nav item definitions
@@ -37,6 +39,11 @@ const NAV_ITEMS = [
     to: "/holidays",
     icon: CalendarDays,
     label: "Holidays",
+  },
+  {
+    to: "/hr/calendar",
+    icon: Calendar,
+    label: "Calendar",
   },
   {
     to: "/salary",
@@ -156,6 +163,10 @@ const HRLayout = () => {
       {/* ── Main content ──────────────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl px-6 py-8">
+          {/* Top bar with notification bell */}
+          <div className="mb-6 flex items-center justify-end">
+            <NotificationBell />
+          </div>
           <Outlet />
         </div>
       </main>

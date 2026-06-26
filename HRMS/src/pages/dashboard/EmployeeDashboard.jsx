@@ -6,7 +6,6 @@ import {
   Clock3,
   BellRing,
   Cake,
-  IndianRupee,
   ArrowRight,
 } from "lucide-react";
 import dayjs from "dayjs";
@@ -64,7 +63,6 @@ const normalizeDashboardData = (payload) => {
     leaveCount: src.leaveCount ?? 0,
     unreadNotifications: src.unreadNotifications ?? 0,
     holidays: Array.isArray(src.upcomingHolidays) ? src.upcomingHolidays : [],
-    latestSalary: src.latestSalary ?? null,
   };
 };
 
@@ -139,39 +137,6 @@ const BirthdayItem = ({ person, isSelf }) => {
         {isToday ? "Today 🎉" : `In ${daysUntil}d`}
       </span>
     </div>
-  );
-};
-
-const SalaryWidget = ({ salary, navigate }) => {
-  const statusStyle =
-    salary.paymentStatus === "Paid"
-      ? "bg-green-100 text-green-700"
-      : salary.paymentStatus === "Processed"
-      ? "bg-blue-100 text-blue-700"
-      : "bg-yellow-100 text-yellow-700";
-
-  return (
-    <section
-      className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
-      onClick={() => navigate("/my-salary")}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-gray-700">
-          <IndianRupee size={18} />
-          <span className="font-semibold">Latest Salary</span>
-        </div>
-        <ArrowRight size={16} className="text-gray-400" />
-      </div>
-      <p className="text-2xl font-bold text-gray-950">
-        ₹{(salary.netSalary ?? 0).toLocaleString("en-IN")}
-      </p>
-      <p className="mt-1 text-sm text-gray-500">
-        {MONTH_NAMES[(salary.month ?? 1) - 1]} {salary.year}
-      </p>
-      <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusStyle}`}>
-        {salary.paymentStatus ?? "Pending"}
-      </span>
-    </section>
   );
 };
 
@@ -321,11 +286,6 @@ const EmployeeDashboard = () => {
                   ))}
                 </div>
               </SectionCard>
-            )}
-
-            {/* Salary snippet */}
-            {data?.latestSalary && (
-              <SalaryWidget salary={data.latestSalary} navigate={navigate} />
             )}
           </div>
         </div>

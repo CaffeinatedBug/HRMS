@@ -29,8 +29,9 @@ import SalaryDetails from "../pages/salary/SalaryDetails";
 import Notifications from "../pages/notifications/Notifications";
 import Profile from "../pages/profile/Profile";
 import Reports from "../pages/reports/Reports";
-import MySalary from "../pages/salary/MySalary";
 import Birthdays from "../pages/birthdays/Birthdays";
+import CalendarPage from "../pages/calendar/CalendarPage";
+import CompleteProfile from "../pages/auth/CompleteProfile";
 import NotFound from "../pages/not-found/NotFound";
 
 const AppRoutes = () => {
@@ -45,6 +46,17 @@ const AppRoutes = () => {
           <PublicRoute>
             <LoginPage />
           </PublicRoute>
+        }
+      />
+
+      {/* DOB Wall — shown to employees who logged in before DOB was required */}
+
+      <Route
+        path="/complete-profile"
+        element={
+          <ProtectedRoute>
+            <CompleteProfile />
+          </ProtectedRoute>
         }
       />
 
@@ -115,6 +127,11 @@ const AppRoutes = () => {
           path="/reports"
           element={<Reports />}
         />
+
+        <Route
+          path="/hr/calendar"
+          element={<CalendarPage />}
+        />
       </Route>
 
       {/* Employee Routes */}
@@ -167,14 +184,15 @@ const AppRoutes = () => {
           element={<Notifications />}
         />
 
-        <Route
-          path="/my-salary"
-          element={<MySalary />}
-        />
 
         <Route
           path="/employee/birthdays"
           element={<Birthdays />}
+        />
+
+        <Route
+          path="/employee/calendar"
+          element={<CalendarPage />}
         />
       </Route>
 
