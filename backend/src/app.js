@@ -3,8 +3,52 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const fileUpload = require("express-fileupload");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
+
+/*
+|--------------------------------------------------------------------------
+| Trust Proxy
+|
+| Required so req.ip resolves to the real client IP when the app sits
+| behind Nginx or any other reverse proxy. Without this, req.ip is the
+| proxy's address, not the client's.
+|--------------------------------------------------------------------------
+*/
+
+app.set("trust proxy", 1);
+
+/*
+|--------------------------------------------------------------------------
+| Rate Limiters
+|
+| auth   — 10 attempts per 15 min per IP (brute-force protection)
+| punch  — 20 requests per 15 min per IP (attendance fraud prevention)
+|--------------------------------------------------------------------------
+*/
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many attempts. Please try again after 15 minutes.",
+  },
+});
+
+const punchLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many punch requests. Please try again later.",
+  },
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +133,7 @@ const reportRoutes = require(
 
 app.use(
   "/api/auth",
+  authLimiter,
   authRoutes
 );
 
@@ -99,6 +144,7 @@ app.use(
 
 app.use(
   "/api/attendance",
+  punchLimiter,
   attendanceRoutes
 );
 
