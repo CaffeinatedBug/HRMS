@@ -31,6 +31,7 @@ const RegisterPage = () => {
       lastName: "",
       email: "",
       phone: "",
+      dob: "",
       password: "",
       confirmPassword: "",
     });
@@ -96,6 +97,23 @@ const RegisterPage = () => {
       return;
     }
 
+    if (!formData.dob) {
+      setFormError("Date of birth is required.");
+      return;
+    }
+
+    const dobDate = new Date(formData.dob);
+    const today = new Date();
+    const age = today.getFullYear() - dobDate.getFullYear();
+    if (dobDate >= today) {
+      setFormError("Date of birth must be in the past.");
+      return;
+    }
+    if (age < 16) {
+      setFormError("You must be at least 16 years old to register.");
+      return;
+    }
+
     dispatch(
       registerUser({
         employeeId:
@@ -108,6 +126,7 @@ const RegisterPage = () => {
           formData.email.trim(),
         phone:
           formData.phone.trim(),
+        dob: formData.dob,
         password:
           formData.password,
         role: "EMPLOYEE",
@@ -249,6 +268,25 @@ const RegisterPage = () => {
                 className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-lg outline-none"
               />
             </div>
+          </div>
+
+          {/* DOB — required */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              DATE OF BIRTH <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              max={new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0]}
+              className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm text-gray-800"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-400">Used for birthday notifications. Locked after registration.</p>
           </div>
 
           <div>

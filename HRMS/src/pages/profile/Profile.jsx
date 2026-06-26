@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
-import { Mail, Phone, MapPin, Briefcase, User, Save, AlertCircle, Calendar, Hash } from "lucide-react";
+import { Mail, Phone, MapPin, Briefcase, User, Save, AlertCircle, Calendar, Hash, Lock } from "lucide-react";
 import BaseApiManager from "../../api/BaseApiManager";
 import { EMPLOYEE } from "../../api/endpoints";
 import { getProfile } from "../../redux/auth/authThunk";
@@ -77,7 +77,7 @@ const Profile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  const [form, setForm] = useState({ phone: "", address: "", gender: "" });
+  const [form, setForm] = useState({ phone: "", address: "", gender: "", dob: "" });
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -88,6 +88,8 @@ const Profile = () => {
         phone:   user.phone   ?? "",
         address: user.address ?? "",
         gender:  user.gender  ?? "",
+        // Only pre-fill dob in state if NOT yet set (first-time entry)
+        dob: user.dob ? "" : "",
       });
     }
   }, [user]);
@@ -106,7 +108,16 @@ const Profile = () => {
     setErrorMessage("");
 
     try {
-      const res = await BaseApiManager.put(EMPLOYEE.UPDATE_PROFILE, form);
+      const payload = { ...form };
+
+      // Only send dob when it's being set for the first time
+      if (user?.dob) {
+        delete payload.dob; // locked — don't send, backend would reject anyway
+      } else if (!payload.dob) {
+        delete payload.dob; // not provided — skip
+      }
+
+      const res = await BaseApiManager.put(EMPLOYEE.UPDATE_PROFILE, payload);
       setSuccessMessage(res?.message ?? "Profile updated successfully!");
       dispatch(getProfile());
     } catch (err) {
@@ -161,6 +172,11 @@ const Profile = () => {
               icon={Calendar}
               label="Joined"
               value={user.joiningDate ? dayjs(user.joiningDate).format("DD MMM YYYY") : "—"}
+            />
+            <InfoRow
+              icon={user.dob ? Lock : Calendar}
+              label="Date of Birth"
+              value={user.dob ? dayjs(user.dob).format("DD MMM YYYY") : "Not set"}
             />
           </div>
         </section>
@@ -217,6 +233,45 @@ const Profile = () => {
                     <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* DOB — one-time editable, locked after first save */}
+              <div>
+                <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                  Date of Birth
+                  {user.dob && <Lock size={12} className="text-gray-400" />}
+                </label>
+
+                {user.dob ? (
+                  // Already set — show locked read-only
+                  <div>
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-100 px-4 py-3 text-sm text-gray-400">
+                      <Lock size={14} />
+                      <span>{dayjs(user.dob).format("DD MMMM YYYY")}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-400">
+                      DOB is locked. Contact HR to request a change.
+                    </p>
+                  </div>
+                ) : (
+                  // Not yet set — one-time editable
+                  <div>
+                    <input
+                      id="dob"
+                      type="date"
+                      name="dob"
+                      value={form.dob ?? ""}
+                      onChange={handleChange}
+                      max={new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000)
+                        .toISOString()
+                        .split("T")[0]}
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                    <p className="mt-1 text-xs text-amber-600 font-medium">
+                      ⚠ Once saved, DOB cannot be changed without HR approval.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

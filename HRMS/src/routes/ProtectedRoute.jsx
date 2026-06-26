@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Loader from "../components/common/Loader";
 
@@ -14,6 +14,8 @@ const ProtectedRoute = ({
   } = useSelector(
     (state) => state.auth
   );
+
+  const location = useLocation();
 
   if (
     !initialized &&
@@ -47,6 +49,29 @@ const ProtectedRoute = ({
     return (
       <Navigate
         to={redirectTo}
+        replace
+      />
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | DOB Wall — Option B
+  |
+  | If an EMPLOYEE has no DOB set, redirect to /complete-profile.
+  | This blocks all protected routes until DOB is provided.
+  | HR accounts are exempt (managed by system administrators).
+  |--------------------------------------------------------------------------
+  */
+
+  if (
+    user?.role === "EMPLOYEE" &&
+    !user?.dob &&
+    location.pathname !== "/complete-profile"
+  ) {
+    return (
+      <Navigate
+        to="/complete-profile"
         replace
       />
     );
