@@ -1,5 +1,11 @@
 require("dotenv").config();
 
+// Fail fast if required env vars are missing — must be called before anything else
+const validateEnv = require("./utils/envValidator");
+validateEnv();
+
+const logger = require("./utils/logger");
+
 const http = require("http");
 
 const app = require("./app");
@@ -75,8 +81,6 @@ attendanceCron();
 server.listen(
   PORT,
   () => {
-    console.log(
-      `🚀 Server Running On Port ${PORT}`
-    );
+    logger.info(`Server running`, { port: PORT, env: process.env.NODE_ENV || "development" });
   }
 );
