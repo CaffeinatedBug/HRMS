@@ -2,8 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const mongoSanitize = require("express-mongo-sanitize");
 const fileUpload = require("express-fileupload");
 const rateLimit = require("express-rate-limit");
+const logger = require("./utils/logger");
 
 const app = express();
 
@@ -28,6 +30,7 @@ app.set("trust proxy", 1);
 |--------------------------------------------------------------------------
 */
 
+// auth — 10 attempts per 15 min (brute-force protection)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -39,6 +42,7 @@ const authLimiter = rateLimit({
   },
 });
 
+// punch — 20 requests per 15 min (attendance fraud prevention)
 const punchLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -50,6 +54,20 @@ const punchLimiter = rateLimit({
   },
 });
 
+// Global backstop — 150 req per 15 min for all /api/ routes
+// Industry Practice: defence-in-depth — even if a specific limiter
+// is misconfigured, the global cap prevents runaway traffic.
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests. Please slow down.",
+  },
+});
+
 /*
 |--------------------------------------------------------------------------
 | Middlewares
@@ -58,14 +76,36 @@ const punchLimiter = rateLimit({
 
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // TODO: restrict to ALLOWED_ORIGINS once deployed to production
     credentials: true,
   })
 );
 
-app.use(helmet());
+/*
+ * Helmet — sets 14 security headers in one call.
+ * CSP tuned for Cloudinary (profile images) and same-origin scripts.
+ * Industry Practice: explicit CSP is far safer than the default open policy.
+ */
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc:  ["'self'"],
+        styleSrc:   ["'self'", "'unsafe-inline'"],
+        imgSrc:     ["'self'", "data:", "https://res.cloudinary.com"],
+        connectSrc: ["'self'"],
+        fontSrc:    ["'self'", "data:"],
+        objectSrc:  ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // needed for Cloudinary images
+  })
+);
 
-app.use(morgan("dev"));
+// Routes morgan HTTP logs through winston so every entry is structured JSON
+app.use(morgan("combined", { stream: logger.stream }));
 
 app.use(express.json());
 
@@ -75,6 +115,13 @@ app.use(
   })
 );
 
+/*
+ * express-mongo-sanitize — strips $ and . from req.body, req.params, req.query.
+ * Industry Practice: prevents NoSQL injection attacks (e.g. { "$where": "..." } payloads).
+ * Zero configuration needed — just mount it after body parsing.
+ */
+app.use(mongoSanitize());
+
 app.use(
   fileUpload({
     useTempFiles: true,
@@ -82,6 +129,9 @@ app.use(
     createParentPath: true,
   })
 );
+
+// Global API rate limiter (backstop for all /api/ routes)
+app.use("/api/", globalApiLimiter);
 
 /*
 |--------------------------------------------------------------------------
