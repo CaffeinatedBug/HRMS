@@ -13,13 +13,17 @@ let io;
 |--------------------------------------------------------------------------
 */
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173"];
+
 const initializeSocket = (server) => {
   const { Server } = require("socket.io");
 
   io = new Server(server, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
+      origin: allowedOrigins,
+      methods: ["GET", "POST", "PUT", "DELETE"],
       credentials: true,
     },
   });

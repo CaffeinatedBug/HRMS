@@ -74,9 +74,13 @@ const globalApiLimiter = rateLimit({
 |--------------------------------------------------------------------------
 */
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173"];
+
 app.use(
   cors({
-    origin: "*", // TODO: restrict to ALLOWED_ORIGINS once deployed to production
+    origin: allowedOrigins,
     credentials: true,
   })
 );

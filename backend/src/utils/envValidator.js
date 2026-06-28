@@ -13,9 +13,9 @@
 */
 
 const REQUIRED_VARS = [
-  { key: "JWT_SECRET",        hint: "Secret key for signing JWTs. Min 32 random chars." },
-  { key: "DB_URL",            hint: "MongoDB connection string (mongodb+srv://...)" },
-  { key: "ALLOWED_OFFICE_IPS",hint: "Comma-separated list of office IP addresses for attendance." },
+  { key: "JWT_SECRET", hint: "Secret key for signing JWTs. Min 32 random chars." },
+  { key: "MONGO_URI", hint: "MongoDB connection string (mongodb+srv://...)" },
+  { key: "ALLOWED_OFFICE_IPS", hint: "Comma-separated list of office IP addresses for attendance." },
 ];
 
 const validateEnv = () => {
