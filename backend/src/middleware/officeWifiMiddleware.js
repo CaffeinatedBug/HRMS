@@ -16,6 +16,8 @@
 |--------------------------------------------------------------------------
 */
 
+const logger = require("../utils/logger");
+
 const buildAllowedIps = () => {
   const envIps = (process.env.ALLOWED_OFFICE_IPS ?? "")
     .split(",")
@@ -56,16 +58,8 @@ const officeWifiMiddleware = (req, res, next) => {
       .trim()
       .replace(/^::ffff:/, "");
 
-    /*
-    |--------------------------------------------------------------------------
-    | Debug Logs
-    |--------------------------------------------------------------------------
-    */
-
-    console.log("\n========== OFFICE WIFI CHECK ==========");
-    console.log("Detected IP  :", clientIp);
-    console.log("Allowed IPs  :", ALLOWED_IPS);
-    console.log("=======================================\n");
+    // Debug-only: log detected IP. Suppressed in production (level=info).
+    logger.debug("Office WiFi check", { clientIp });
 
     /*
     |--------------------------------------------------------------------------
@@ -74,23 +68,22 @@ const officeWifiMiddleware = (req, res, next) => {
     */
 
     if (!ALLOWED_IPS.includes(clientIp)) {
-      console.log("❌ Attendance Blocked — IP not whitelisted:", clientIp);
+      logger.warn("Attendance blocked — IP not whitelisted", { clientIp });
 
       return res.status(403).json({
         success: false,
         message: "Attendance allowed only on office network",
-        detectedIp: clientIp,
       });
     }
 
-    console.log("✅ Office Network Verified:", clientIp);
+    logger.debug("Office network verified", { clientIp });
     next();
   } catch (error) {
-    console.error("officeWifiMiddleware error:", error);
+    logger.error("officeWifiMiddleware error", { error: error.message, stack: error.stack });
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Could not verify network access.",
     });
   }
 };

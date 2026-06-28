@@ -37,7 +37,7 @@ const {
 router.put(
   "/profile",
   authMiddleware,
-  updateProfile
+  updateOwnProfile
 );
 
 /*

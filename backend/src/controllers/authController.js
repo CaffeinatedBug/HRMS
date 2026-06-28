@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const logger = require("../utils/logger");
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +50,7 @@ exports.register = async (req, res) => {
       role: role || "EMPLOYEE",
     });
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       success: true,
@@ -66,12 +67,11 @@ exports.register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Register Error:", error);
+    logger.error("Register error", { error: error.message, stack: error.stack });
 
     res.status(500).json({
       success: false,
-      message: "Registration failed",
-      error: error.message,
+      message: "Registration failed. Please try again.",
     });
   }
 };
@@ -118,7 +118,7 @@ exports.login = async (req, res) => {
 
     await user.save();
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
 
     res.status(200).json({
       success: true,
@@ -136,12 +136,11 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
+    logger.error("Login error", { error: error.message, stack: error.stack });
 
     res.status(500).json({
       success: false,
-      message: "Login failed",
-      error: error.message,
+      message: "Login failed. Please try again.",
     });
   }
 };
@@ -170,12 +169,11 @@ exports.getProfile = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.error("Profile Error:", error);
+    logger.error("GetProfile error", { error: error.message, stack: error.stack });
 
     res.status(500).json({
       success: false,
-      message: "Failed to fetch profile",
-      error: error.message,
+      message: "Failed to fetch profile.",
     });
   }
 };
@@ -193,9 +191,11 @@ exports.logout = async (req, res) => {
       message: "Logout successful",
     });
   } catch (error) {
+    logger.error("Logout error", { error: error.message, stack: error.stack });
+
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Logout failed. Please try again.",
     });
   }
 };
