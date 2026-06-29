@@ -15,6 +15,7 @@ const roleMiddleware =
 
 const {
   getAllUsers,
+  getBirthdayDirectory,
   getUserById,
   updateProfile,
 } = require(
@@ -53,6 +54,18 @@ router.post(
   "/complete-profile",
   authMiddleware,
   completeProfile
+);
+
+/*
+|--------------------------------------------------------------------------
+| Birthday Directory (All Authenticated Users)
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+  "/birthdays",
+  authMiddleware,
+  getBirthdayDirectory
 );
 
 /*

@@ -114,9 +114,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    user.lastLogin = new Date();
-
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date() } }
+    );
 
     const token = generateToken(user._id, user.role);
 

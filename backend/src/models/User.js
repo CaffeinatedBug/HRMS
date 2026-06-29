@@ -125,7 +125,7 @@ const userSchema = new mongoose.Schema(
 |--------------------------------------------------------------------------
 */
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function () {
   if (this.isModified("dob") && this.dob) {
     const d = new Date(this.dob);
     this.birthMonth = d.getUTCMonth() + 1; // 1-indexed
@@ -134,7 +134,6 @@ userSchema.pre("save", function (next) {
     this.birthMonth = null;
     this.birthDay   = null;
   }
-  next();
 });
 
 /*

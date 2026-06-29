@@ -36,6 +36,39 @@ exports.getAllUsers =
 
 /*
 |--------------------------------------------------------------------------
+| Get Birthday Directory (All Roles)
+|
+| Returns only safe profile fields needed by birthday UI/cards.
+| Accessible to any authenticated user.
+|--------------------------------------------------------------------------
+*/
+
+exports.getBirthdayDirectory =
+  async (req, res) => {
+    try {
+      const users = await User.find(
+        {
+          status: "Active",
+          dob: { $ne: null },
+        },
+        "firstName lastName dob designation department profileImage role"
+      ).sort({ firstName: 1, lastName: 1 });
+
+      res.status(200).json({
+        success: true,
+        count: users.length,
+        users,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
+
+/*
+|--------------------------------------------------------------------------
 | Get User By Id
 |--------------------------------------------------------------------------
 */

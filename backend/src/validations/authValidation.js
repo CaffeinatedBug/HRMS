@@ -23,8 +23,14 @@ exports.registerValidation = [
       "Password must be at least 6 characters"
     ),
 
+  body("dob")
+    .notEmpty()
+    .withMessage("Date of birth is required")
+    .isISO8601()
+    .withMessage("Please enter a valid date of birth"),
+
   body("phone")
-    .optional()
+    .optional({ checkFalsy: true })
     .isMobilePhone("en-IN")
     .withMessage(
       "Please enter a valid phone number"
