@@ -7,6 +7,7 @@ export const AUTH = {
 // Backend mounts at /api/users (not /api/employees)
 export const EMPLOYEE = {
   LIST: "/users/all",
+  BIRTHDAYS: "/users/birthdays",
   DETAILS: (id) => `/users/${id}`,
   UPDATE_PROFILE: "/users/profile",      // PUT — updates the logged-in user's profile
   COMPLETE_PROFILE: "/users/complete-profile", // POST — first-time DOB wall submission

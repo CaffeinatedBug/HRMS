@@ -77,6 +77,23 @@ const ProtectedRoute = ({
     );
   }
 
+  if (
+    location.pathname === "/complete-profile" &&
+    user?.dob
+  ) {
+    const redirectTo =
+      user?.role === "HR"
+        ? "/dashboard"
+        : "/employee/dashboard";
+
+    return (
+      <Navigate
+        to={redirectTo}
+        replace
+      />
+    );
+  }
+
   return children;
 };
 

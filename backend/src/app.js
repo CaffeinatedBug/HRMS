@@ -121,10 +121,80 @@ app.use(
 
 /*
  * express-mongo-sanitize — strips $ and . from req.body, req.params, req.query.
- * Industry Practice: prevents NoSQL injection attacks (e.g. { "$where": "..." } payloads).
- * Zero configuration needed — just mount it after body parsing.
+ * Express 5 defines req.query as a getter-only property; the default middleware
+ * reassigns req.query and throws. Sanitize query in place; body/params may be reassigned.
  */
-app.use(mongoSanitize());
+const mongoSanitizeOptions = { replaceWith: "_" };
+
+app.use((req, res, next) => {
+  try {
+    // #region agent log
+    fetch("http://127.0.0.1:7814/ingest/eddf7cf6-1202-43f1-8fd7-e2ec93221482", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4b61f8" },
+      body: JSON.stringify({
+        sessionId: "4b61f8",
+        location: "app.js:mongoSanitizeMiddleware:entry",
+        message: "mongoSanitize middleware entered",
+        data: {
+          method: req.method,
+          path: req.path,
+          hasBody: Boolean(req.body && Object.keys(req.body).length),
+          hasQuery: Boolean(req.query && Object.keys(req.query).length),
+        },
+        timestamp: Date.now(),
+        hypothesisId: "A",
+        runId: "post-fix",
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    if (req.body) {
+      req.body = mongoSanitize.sanitize(req.body, mongoSanitizeOptions);
+    }
+    if (req.params) {
+      req.params = mongoSanitize.sanitize(req.params, mongoSanitizeOptions);
+    }
+    if (req.query) {
+      mongoSanitize.sanitize(req.query, mongoSanitizeOptions);
+    }
+
+    // #region agent log
+    fetch("http://127.0.0.1:7814/ingest/eddf7cf6-1202-43f1-8fd7-e2ec93221482", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4b61f8" },
+      body: JSON.stringify({
+        sessionId: "4b61f8",
+        location: "app.js:mongoSanitizeMiddleware:exit",
+        message: "mongoSanitize middleware completed",
+        data: { method: req.method, path: req.path },
+        timestamp: Date.now(),
+        hypothesisId: "A",
+        runId: "post-fix",
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    next();
+  } catch (err) {
+    // #region agent log
+    fetch("http://127.0.0.1:7814/ingest/eddf7cf6-1202-43f1-8fd7-e2ec93221482", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4b61f8" },
+      body: JSON.stringify({
+        sessionId: "4b61f8",
+        location: "app.js:mongoSanitizeMiddleware:error",
+        message: "mongoSanitize middleware failed",
+        data: { error: err.message, method: req.method, path: req.path },
+        timestamp: Date.now(),
+        hypothesisId: "A",
+        runId: "post-fix",
+      }),
+    }).catch(() => {});
+    // #endregion
+    next(err);
+  }
+});
 
 app.use(
   fileUpload({

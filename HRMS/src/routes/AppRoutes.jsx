@@ -30,7 +30,6 @@ import Notifications from "../pages/notifications/Notifications";
 import Profile from "../pages/profile/Profile";
 import Reports from "../pages/reports/Reports";
 import Birthdays from "../pages/birthdays/Birthdays";
-import CalendarPage from "../pages/calendar/CalendarPage";
 import CompleteProfile from "../pages/auth/CompleteProfile";
 import NotFound from "../pages/not-found/NotFound";
 
@@ -127,11 +126,6 @@ const AppRoutes = () => {
           path="/reports"
           element={<Reports />}
         />
-
-        <Route
-          path="/hr/calendar"
-          element={<CalendarPage />}
-        />
       </Route>
 
       {/* Employee Routes */}
@@ -188,11 +182,6 @@ const AppRoutes = () => {
         <Route
           path="/employee/birthdays"
           element={<Birthdays />}
-        />
-
-        <Route
-          path="/employee/calendar"
-          element={<CalendarPage />}
         />
       </Route>
 
