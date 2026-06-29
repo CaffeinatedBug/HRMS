@@ -165,7 +165,7 @@ const EmployeeDashboard = () => {
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
-  // ── Team birthday data (HR-only endpoint; fails silently for employees) ─
+  // ── Team birthday data (available for both roles) ─
 
   useEffect(() => {
     fetchAllEmployees()
@@ -174,7 +174,7 @@ const EmployeeDashboard = () => {
         setTeamBirthdays(birthdaysWithinDays(members, 30));
       })
       .catch(() => {
-        // Not HR — fall back to own birthday only
+        // API unavailable — fall back to own birthday only
         if (self?.dob) {
           setTeamBirthdays(
             birthdaysWithinDays([self], 30)

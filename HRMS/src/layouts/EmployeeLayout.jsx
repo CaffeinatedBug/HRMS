@@ -13,7 +13,6 @@ import {
   X,
   BarChart2,
   Cake,
-  Calendar,
 } from "lucide-react";
 import { useState } from "react";
 import { logoutUser } from "../redux/auth/authThunk";
@@ -29,7 +28,6 @@ const NAV_ITEMS = [
   { to: "/attendance/monthly",     label: "Monthly Report", icon: BarChart2 },
   { to: "/my-leaves",              label: "My Leaves",       icon: CalendarCheck },
   { to: "/apply-leave",            label: "Apply Leave",     icon: FilePlus },
-  { to: "/employee/calendar",      label: "Calendar",        icon: Calendar },
   { to: "/employee/birthdays",     label: "Birthdays",       icon: Cake },
   { to: "/employee/holidays",      label: "Holidays",        icon: CalendarDays },
   { to: "/employee/notifications", label: "Notifications",   icon: Bell },

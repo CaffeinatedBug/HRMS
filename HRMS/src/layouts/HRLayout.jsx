@@ -10,7 +10,6 @@ import {
   BarChart3,
   LogOut,
   ChevronRight,
-  Calendar,
 } from "lucide-react";
 import { logoutUser } from "../redux/auth/authThunk";
 import NotificationBell from "../components/notifications/NotificationBell";
@@ -39,11 +38,6 @@ const NAV_ITEMS = [
     to: "/holidays",
     icon: CalendarDays,
     label: "Holidays",
-  },
-  {
-    to: "/hr/calendar",
-    icon: Calendar,
-    label: "Calendar",
   },
   {
     to: "/salary",

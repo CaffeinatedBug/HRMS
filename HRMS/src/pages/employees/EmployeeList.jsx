@@ -4,8 +4,6 @@ import dayjs from "dayjs";
 import {
   Search,
   Users,
-  UserCheck,
-  UserX,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -23,17 +21,6 @@ import { getErrorMessage } from "../../utils/helper";
 // ---------------------------------------------------------------------------
 
 const PAGE_SIZE = 15;
-
-const STATUS_CONFIG = {
-  Active: {
-    className: "bg-green-50 text-green-700 border-green-200",
-    dot: "bg-green-500",
-  },
-  Inactive: {
-    className: "bg-gray-100 text-gray-500 border-gray-200",
-    dot: "bg-gray-400",
-  },
-};
 
 const ROLE_CONFIG = {
   HR: "bg-purple-50 text-purple-700 border-purple-200",
@@ -64,18 +51,6 @@ const avatarColor = (id) =>
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-const StatusBadge = ({ status }) => {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.Active;
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cfg.className}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-      {status ?? "Active"}
-    </span>
-  );
-};
 
 const RoleBadge = ({ role }) => {
   const cls = ROLE_CONFIG[role] ?? ROLE_CONFIG.EMPLOYEE;
@@ -140,7 +115,6 @@ const EmployeeList = () => {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -174,8 +148,6 @@ const EmployeeList = () => {
   const summary = useMemo(
     () => ({
       total: employees.length,
-      active: employees.filter((e) => e.status !== "Inactive").length,
-      inactive: employees.filter((e) => e.status === "Inactive").length,
     }),
     [employees]
   );
@@ -195,12 +167,10 @@ const EmployeeList = () => {
         email.includes(q);
       const matchesDept =
         deptFilter === "all" || emp.department === deptFilter;
-      const matchesStatus =
-        statusFilter === "all" || emp.status === statusFilter;
 
-      return matchesSearch && matchesDept && matchesStatus;
+      return matchesSearch && matchesDept;
     });
-  }, [employees, search, deptFilter, statusFilter]);
+  }, [employees, search, deptFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -263,45 +233,18 @@ const EmployeeList = () => {
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          {
-            label: "Total Employees",
-            value: summary.total,
-            icon: Users,
-            color: "border-blue-200 bg-blue-50 text-blue-800",
-            iconColor: "text-blue-600",
-          },
-          {
-            label: "Active",
-            value: summary.active,
-            icon: UserCheck,
-            color: "border-green-200 bg-green-50 text-green-800",
-            iconColor: "text-green-600",
-          },
-          {
-            label: "Inactive",
-            value: summary.inactive,
-            icon: UserX,
-            color: "border-gray-200 bg-gray-50 text-gray-700",
-            iconColor: "text-gray-400",
-          },
-        ].map(({ label, value, icon: Icon, color, iconColor }) => (
-          <div
-            key={label}
-            className={`flex items-center gap-4 rounded-2xl border px-5 py-4 ${color}`}
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60">
-              <Icon size={20} className={iconColor} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{loading ? "—" : value}</p>
-              <p className="text-xs font-semibold uppercase tracking-widest opacity-70">
-                {label}
-              </p>
-            </div>
+      <div className="grid gap-4 sm:grid-cols-1">
+        <div className="flex items-center gap-4 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-blue-800">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60">
+            <Users size={20} className="text-blue-600" />
           </div>
-        ))}
+          <div>
+            <p className="text-2xl font-bold">{loading ? "—" : summary.total}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-70">
+              Total Employees
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Filters toolbar */}
@@ -343,21 +286,6 @@ const EmployeeList = () => {
           ))}
         </select>
 
-        {/* Status filter */}
-        <select
-          id="status-filter"
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            resetPage();
-          }}
-          className="h-9 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-gray-300"
-        >
-          <option value="all">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-
         <p className="ml-auto text-xs text-gray-400">
           {loading ? "…" : `${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}
         </p>
@@ -369,7 +297,7 @@ const EmployeeList = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50 text-left">
-                {["Employee", "Emp ID", "Department", "Designation", "Joined", "Status", "Role", ""].map(
+                {["Employee", "Emp ID", "Department", "Designation", "Joined", "Role", ""].map(
                   (col) => (
                     <th
                       key={col}
@@ -388,7 +316,7 @@ const EmployeeList = () => {
               ) : paginated.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     className="px-5 py-16 text-center"
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -462,11 +390,6 @@ const EmployeeList = () => {
                       {emp.joiningDate
                         ? dayjs(emp.joiningDate).format("DD MMM YYYY")
                         : "—"}
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-4">
-                      <StatusBadge status={emp.status} />
                     </td>
 
                     {/* Role */}
