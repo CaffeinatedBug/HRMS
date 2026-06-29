@@ -153,17 +153,16 @@ const Birthdays = () => {
   const [filter, setFilter] = useState("upcoming"); // "upcoming" | "month" | "all"
 
   // ── Fetch team for colleague birthdays ─────────────────────────────────
-  // /users/all is HR-only; if it fails we gracefully fall back to own-only mode.
 
   const loadTeam = useCallback(async () => {
     setTeamLoading(true);
+    setTeamError("");
     try {
       const res = await fetchAllEmployees();
       const members = (res?.users ?? []).filter((u) => u.dob);
       setTeamMembers(members);
     } catch {
-      // Expected for employee role — endpoint is HR-only
-      setTeamError("Team birthday data is available to HR users only.");
+      setTeamError("Unable to load team birthday data right now.");
       setTeamMembers([]);
     } finally {
       setTeamLoading(false);
@@ -222,7 +221,7 @@ const Birthdays = () => {
         <p className="mt-1 text-sm text-gray-600">
           {teamMode
             ? "Team birthdays calculated from employee date of birth records."
-            : "Your own birthday details. Team birthdays visible to HR users."}
+            : "Birthday data is currently unavailable. Showing your profile details only."}
         </p>
       </div>
 

@@ -78,7 +78,7 @@ const getBirthdayCache = () => birthdayCache;
 |
 | Notification logic:
 |   - Birthday person → personal birthday message (celebrate yourself!)
-|   - All OTHER employees → "It's [name]'s birthday today" notification
+|   - All OTHER active users (HR + employees) → birthday notification
 |   - Never notifies a person about their own birthday in the colleague flow
 |--------------------------------------------------------------------------
 */
@@ -93,8 +93,8 @@ const birthdayCron = () => {
         return;
       }
 
-      // Fetch all active users for colleague notifications
-      const allUsers = await User.find({}, "_id").lean();
+      // Notify all active users across roles (HR + EMPLOYEE)
+      const allUsers = await User.find({ status: "Active" }, "_id").lean();
       const allUserIds = allUsers.map((u) => String(u._id));
 
       for (const birthdayPerson of cache.birthdays) {
